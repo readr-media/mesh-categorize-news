@@ -64,7 +64,9 @@ async def categorize(data: CategoryRequestBody):
   
   ### get cms stories
   gql_stories_string = gql_query_stories.format(take=take)
-  stories = gql_query(gql_endpoint, gql_stories_string)
+  stories, error_message = gql_query(gql_endpoint, gql_stories_string)
+  if error_message:
+    return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=dict(error="Query stories failed."))
   stories = stories.get('stories', [])
   if len(stories)==0:
     return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=dict(error="Empty stories."))
@@ -78,6 +80,6 @@ async def categorize(data: CategoryRequestBody):
   
   ### update category
   response, error_message = gql_story_update(gql_endpoint, stories, model_category_names)
-  if error_message is not None:
+  if error_message:
     return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=dict(error="Update category for stories failed."))
   return response
