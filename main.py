@@ -5,6 +5,7 @@ from src.classifier import ClassifierSingleton
 from src.request_body import CategoryRequestBody
 from src.gql import gql_query, gql_query_stories, gql_story_update
 from src.tools import preprocess_text
+import src.config as config
 import os
 
 
@@ -52,7 +53,9 @@ async def categorize(data: CategoryRequestBody):
   Cronjob to classify the stories without category.
   '''
   gql_endpoint = os.environ['MESH_GQL_ENDPOINT']
-  take = data['take']
+  take = data.take
+  if take<=config.MIN_TAKE_CATEGORIZATION or take>config.MAX_TAKE_CATEGORIZATION:
+    return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=dict(error="Number of take is not valid."))
   
   ### get classifier model
   classifier = classifier_singleton.get_instance()

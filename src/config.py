@@ -3,6 +3,9 @@ import requests
 import joblib
 import json
 
+MIN_TAKE_CATEGORIZATION = 0
+MAX_TAKE_CATEGORIZATION = 100
+
 def download_models(category_table_url: str, classify_model_url: str, language_model: str='distiluse-base-multilingual-cased-v2'):
     if category_table_url is None or classify_model_url is None:
         print('You should provide category table and classify model urls...')
