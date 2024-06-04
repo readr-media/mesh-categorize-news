@@ -67,6 +67,7 @@ query Stories{{
         id
         title
         summary
+        content
     }}
 }}
 """
