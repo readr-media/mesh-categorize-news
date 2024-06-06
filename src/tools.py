@@ -4,6 +4,8 @@ import string
 
 def remove_html(content):
     soup = bs(content, 'html.parser')
+    for a_tag in soup.find_all('a'):
+        a_tag.extract()
     return soup.get_text()
 
 def remove_punctuation(content):
