@@ -2,11 +2,12 @@ from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from src.classifier import ClassifierSingleton
-from src.request_body import CategoryRequestBody
+from src.request_body import CategoryRequestBody, ClusterRequestBody
 from src.gql import gql_query, gql_query_stories, gql_story_update
 from src.tools import preprocess_text
 import src.config as config
 import os
+from sentence_transformers import util
 
 
 classifier_singleton = ClassifierSingleton()
@@ -83,3 +84,44 @@ async def categorize(data: CategoryRequestBody):
   if error_message:
     return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=dict(error="Update category for stories failed."))
   return response
+
+@app.post('/cluster')
+async def cluster(data: ClusterRequestBody):
+  '''
+  Cronjob to cluster the stories as topic.
+  '''
+  gql_endpoint = os.environ['MESH_GQL_ENDPOINT']
+  take = data.take
+  if take<=config.MIN_TAKE_CATEGORIZATION or take>config.MAX_TAKE_CATEGORIZATION:
+    return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=dict(error="Number of take is not valid."))
+  
+  ### get classifier model
+  classifier = classifier_singleton.get_instance()
+  if classifier is None:
+    return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=dict(error="No classifier exists."))
+  
+  ### get cms stories
+  gql_stories_string = gql_query_stories.format(take=take)
+  stories, error_message = gql_query(gql_endpoint, gql_stories_string)
+  if error_message:
+    return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=dict(error="Query stories failed."))
+  stories = stories.get('stories', [])
+  if len(stories)==0:
+    return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=dict(error="Empty stories."))
+  
+  ### cluster
+  contents = [
+    (story['title'] + preprocess_text(story['summary']) + preprocess_text(story['content'])) for story in stories
+  ]
+  text_embeddings  = classifier.embedding(contents)
+  clusters = util.community_detection(text_embeddings, min_community_size=5, threshold=0.75)
+  
+  # Print for all clusters the top 3 and bottom 3 elements
+  for i, cluster in enumerate(clusters):
+      print("\nCluster {}, #{} Elements ".format(i + 1, len(cluster)))
+      for sentence_id in cluster[0:3]:
+          print("\t", stories[sentence_id]['title'])
+      print("\t", "...")
+      for sentence_id in cluster[-3:]:
+          print("\t", stories[sentence_id]['title'])
+  return "ok"
