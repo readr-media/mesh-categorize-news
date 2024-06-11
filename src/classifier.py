@@ -11,10 +11,13 @@ class Classifier():
         self.embedding_model = embedding_model
         self.classify_model  = classify_model
         self.category_table  = category_table
-    def predict(self, sentences: list):
+    def embedding(self, sentences: list):
         punctuation_pattern = re.escape(string.punctuation)
         sentences_filtered = [re.sub(f'[{punctuation_pattern}]', '', text) for text in sentences]
         embeddings  = self.embedding_model.encode(sentences_filtered)
+        return embeddings
+    def predict(self, sentences: list):
+        embeddings = self.embedding(sentences)
         predictions = self.classify_model.predict(embeddings)
         return predictions
     def category_mapping(self, id):
