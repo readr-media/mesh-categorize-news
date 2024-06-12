@@ -114,9 +114,10 @@ async def cluster(data: ClusterRequestBody):
     (story['title'] + preprocess_text(story['summary']) + preprocess_text(story['content'])) for story in stories
   ]
   text_embeddings  = classifier.embedding(contents)
-  clusters = util.community_detection(text_embeddings, min_community_size=5, threshold=0.75)
+  clusters = util.community_detection(text_embeddings, min_community_size=3, threshold=0.6)
   
   # Print for all clusters the top 3 and bottom 3 elements
+  print("Number of clusters: ", len(clusters))
   for i, cluster in enumerate(clusters):
       print("\nCluster {}, #{} Elements ".format(i + 1, len(cluster)))
       for sentence_id in cluster[0:3]:
