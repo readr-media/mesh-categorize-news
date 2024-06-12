@@ -8,6 +8,7 @@ MAX_TAKE_CATEGORIZATION = 100
 DEFAULT_MIN_COMMUNITY_SIZE = 3
 DEFAULT_SIMILARITY_THRESHOLD = 0.6
 DEFAULT_COMMUNITY_DAYS = 3
+CLUSTER_STR_LEN = 30
 
 def download_models(category_table_url: str, classify_model_url: str, language_model: str='distiluse-base-multilingual-cased-v2'):
     if category_table_url is None or classify_model_url is None:
