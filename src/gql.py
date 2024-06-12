@@ -52,7 +52,7 @@ def gql_story_update(gql_endpoint, stories, model_category_names):
     return json_data, error_message
 
 ### GQL Queries
-gql_query_stories = """
+gql_query_stories_without_category = """
 query Stories{{
     stories(
         where: {{
@@ -71,6 +71,44 @@ query Stories{{
     }}
 }}
 """
+
+gql_query_latest_stories = '''
+query Stories{{
+  stories(
+    where: {{
+      published_date: {{
+        gte: "{START_PUBLISHED_DATE}"
+      }},
+      category: {{
+        id: {{
+          gt: 0
+        }}
+      }}
+    }},
+    orderBy: {{
+      published_date: desc
+    }},
+  ){{
+    id
+    url
+    title
+    category{{
+      id
+    }}
+    source{{
+      id
+    }}
+    published_date
+    summary
+    content
+    og_title
+    og_image
+    og_description
+    full_content
+    origid
+  }}
+}}
+'''
 
 gql_query_categories = """
 query Categories{
