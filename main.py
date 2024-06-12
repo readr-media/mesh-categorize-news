@@ -125,7 +125,7 @@ async def cluster():
   ### cluster: you should remove noise by restricting the length of text
   for category_id, story_list in categorized_stories.items():
     contents = [
-      (story['title'])[:config.CLUSTER_STR_LEN] for story in story_list
+      preprocess_text(story['title'])[:config.CLUSTER_STR_LEN] for story in story_list
     ]
     text_embeddings  = classifier.embedding(contents)
     clusters = util.community_detection(
