@@ -125,7 +125,7 @@ async def cluster():
   ### cluster
   for category_id, story_list in categorized_stories.items():
     contents = [
-      (story['title'] + preprocess_text(story['summary']) + preprocess_text(story['content'])) for story in story_list
+      (story['title'] + preprocess_text(story['summary'])) for story in story_list
     ]
     text_embeddings  = classifier.embedding(contents)
     clusters = util.community_detection(
