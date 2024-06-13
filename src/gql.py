@@ -96,16 +96,20 @@ query Stories{{
       slug
     }}
     source{{
-      id
+      title
+      logo
+      official_site
     }}
     published_date
     summary
     content
+    pickCount
+    commentCount
     og_title
     og_image
     og_description
     full_content
-    origid
+    paywall
   }}
 }}
 '''
