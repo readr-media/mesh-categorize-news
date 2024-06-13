@@ -7,7 +7,8 @@ from src.gql import gql_query, gql_query_stories_without_category, gql_query_lat
 from src.tools import preprocess_text
 import src.config as config
 import os
-from sentence_transformers import util
+# from sentence_transformers import util
+from sklearn.cluster import DBSCAN
 from datetime import datetime, timedelta
 import pytz
 
@@ -93,9 +94,10 @@ async def cluster():
   Cronjob to cluster the stories as topic.
   '''
   gql_endpoint = os.environ['MESH_GQL_ENDPOINT']
-  MIN_COMMUNITY_SIZE = int(os.environ.get('MIN_COMMUNITY_SIZE', config.DEFAULT_MIN_COMMUNITY_SIZE))
-  SIMILARITY_THRESHOLD = float(os.environ.get('SIMILARITY_THRESHOLD', config.DEFAULT_SIMILARITY_THRESHOLD))
+  CLUSTER_EPS = float(os.environ.get('CLUSTER_EPS', config.DEFAULT_CLUSTER_EPS))
+  MIN_SAMPLES = int(os.environ.get('MIN_SAMPLES', config.DEFAULT_MIN_SAMPLES))
   COMMUNITY_DAYS = int(os.environ.get('COMMUNITY_DAYS', config.DEFAULT_COMMUNITY_DAYS))
+  BUCKET = os.environ['BUCKET']
   
   current_time = datetime.now(pytz.timezone('Asia/Taipei'))
   start_time = current_time - timedelta(days=COMMUNITY_DAYS)
@@ -123,20 +125,18 @@ async def cluster():
     story_list.append(story)
   
   ### cluster: you should remove noise by restricting the length of text
+  groups = {}
   for category_id, story_list in categorized_stories.items():
     contents = [
-      preprocess_text(story['title'])[:config.CLUSTER_STR_LEN] for story in story_list
+      preprocess_text(story['title']+story['summary']) for story in story_list
     ]
     text_embeddings  = classifier.embedding(contents)
-    clusters = util.community_detection(
-      text_embeddings, 
-      min_community_size=MIN_COMMUNITY_SIZE, 
-      threshold=SIMILARITY_THRESHOLD
-    )
-    print(f"Number of clusters for category_id {category_id}: ", len(clusters))
-    for i, cluster in enumerate(clusters):
-        print("\nCluster {}, #{} Elements ".format(i + 1, len(cluster)))
-        for sentence_id in cluster:
-            print("\t", stories[sentence_id]['title'])
-    print("--------------------------------")
-  return "ok"
+    clustering = DBSCAN(eps=CLUSTER_EPS, min_samples=MIN_SAMPLES, metric='euclidean').fit(text_embeddings)
+    labels = clustering.labels_ # Note: noisy samples will be labelled -1
+    
+    # classify group
+    group_cluster = groups.setdefault(category_id, {})
+    for idx, label in enumerate(labels):
+        group_list = group_cluster.setdefault(label, [])
+        group_list.append(story_list[idx]['title'])
+  return dict(groups)
