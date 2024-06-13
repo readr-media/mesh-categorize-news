@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from src.classifier import ClassifierSingleton
 from src.request_body import CategoryRequestBody
 from src.gql import gql_query, gql_query_stories_without_category, gql_query_latest_stories, gql_story_update
-from src.tool import preprocess_text, upload_blob, save_file
+from src.tool import preprocess_text, upload_blob, save_file, remove_punctuation
 import src.config as config
 import os
 from sklearn.cluster import DBSCAN
@@ -76,7 +76,7 @@ async def categorize(data: CategoryRequestBody):
   
   ### predict category
   contents = [
-    preprocess_text(story['title']+story['summary']+story['content']) for story in stories
+    remove_punctuation(story['title']+story['summary'])+preprocess_text(story['content']) for story in stories
   ]
   category_ids  = classifier.predict(contents)
   model_category_names = [classifier.category_mapping(id) for id in category_ids]
@@ -126,7 +126,7 @@ async def cluster():
   groups = {}
   for category_name, story_list in categorized_stories.items():
     contents = [
-      preprocess_text(story['title']+story['summary']+story['content']) for story in story_list
+      remove_punctuation(story['title']+story['summary'])+preprocess_text(story['content']) for story in story_list
     ]
     text_embeddings  = classifier.embedding(contents)
     clustering = DBSCAN(eps=CLUSTER_EPS, min_samples=MIN_SAMPLES, metric='euclidean').fit(text_embeddings)
