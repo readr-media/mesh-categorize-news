@@ -148,5 +148,5 @@ async def cluster():
   for category_name, group_data in groups.items():
     filename = os.path.join('data', f"group_{category_name}.json")
     save_file(filename, group_data)
-    upload_blob(filename, cache_contro="cache_control_long")
+    upload_blob(filename, cache_control="cache_control_long")
   return {"message": "upload groups successfully"}
