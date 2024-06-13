@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from src.classifier import ClassifierSingleton
 from src.request_body import CategoryRequestBody
 from src.gql import gql_query, gql_query_stories_without_category, gql_query_latest_stories, gql_story_update
-from tool import preprocess_text, upload_blob, save_file
+from src.tool import preprocess_text, upload_blob, save_file
 import src.config as config
 import os
 from sklearn.cluster import DBSCAN
