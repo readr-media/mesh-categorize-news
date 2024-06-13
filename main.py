@@ -4,10 +4,9 @@ from fastapi.responses import JSONResponse
 from src.classifier import ClassifierSingleton
 from src.request_body import CategoryRequestBody
 from src.gql import gql_query, gql_query_stories_without_category, gql_query_latest_stories, gql_story_update
-from src.tools import preprocess_text
+from tool import preprocess_text, upload_blob, save_file
 import src.config as config
 import os
-# from sentence_transformers import util
 from sklearn.cluster import DBSCAN
 from datetime import datetime, timedelta
 import pytz
@@ -96,11 +95,10 @@ async def cluster():
   gql_endpoint = os.environ['MESH_GQL_ENDPOINT']
   CLUSTER_EPS = float(os.environ.get('CLUSTER_EPS', config.DEFAULT_CLUSTER_EPS))
   MIN_SAMPLES = int(os.environ.get('MIN_SAMPLES', config.DEFAULT_MIN_SAMPLES))
-  COMMUNITY_DAYS = int(os.environ.get('COMMUNITY_DAYS', config.DEFAULT_COMMUNITY_DAYS))
-  BUCKET = os.environ['BUCKET']
+  GROUP_DAYS = int(os.environ.get('GROUP_DAYS', config.DEFAULT_GROUP_DAYS))
   
   current_time = datetime.now(pytz.timezone('Asia/Taipei'))
-  start_time = current_time - timedelta(days=COMMUNITY_DAYS)
+  start_time = current_time - timedelta(days=GROUP_DAYS)
   formatted_start_time = start_time.isoformat()
   
   ### get classifier model
@@ -120,13 +118,13 @@ async def cluster():
   ### categorize
   categorized_stories = {}
   for story in stories:
-    category_id = story['category']['id']
-    story_list = categorized_stories.setdefault(category_id, [])
+    category_name = story['category']['slug']
+    story_list = categorized_stories.setdefault(category_name, [])
     story_list.append(story)
   
   ### cluster: you should remove noise by restricting the length of text
   groups = {}
-  for category_id, story_list in categorized_stories.items():
+  for category_name, story_list in categorized_stories.items():
     contents = [
       preprocess_text(story['title']+story['summary']) for story in story_list
     ]
@@ -134,9 +132,21 @@ async def cluster():
     clustering = DBSCAN(eps=CLUSTER_EPS, min_samples=MIN_SAMPLES, metric='euclidean').fit(text_embeddings)
     labels = clustering.labels_ # Note: noisy samples will be labelled -1
     
-    # classify group
-    group_cluster = groups.setdefault(category_id, {})
+    # categorize group
+    category_group = groups.setdefault(category_name, {})
     for idx, label in enumerate(labels):
-        group_list = group_cluster.setdefault(label, [])
-        group_list.append(story_list[idx]['title'])
-  return dict(groups)
+        label = 0 if label<=0 else label # noisy samples is the same as no-group
+        if label>0:
+            group_section = category_group.setdefault('groups', {})
+            group_list = group_section.setdefault(str(label), [])
+            group_list.append(story_list[idx]['title'])
+        else:
+            other_list  = category_group.setdefault('others', [])
+            other_list.append(story_list[idx]['title'])
+  
+  ### save and upload
+  for category_name, group_data in groups.items():
+    filename = os.path.join('data', f"group_{category_name}.json")
+    save_file(filename, group_data)
+    upload_blob(filename, cache_contro="cache_control_long")
+  return {"message": "upload groups successfully"}

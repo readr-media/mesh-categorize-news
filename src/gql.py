@@ -93,14 +93,13 @@ query Stories{{
     url
     title
     category{{
-      id
+      slug
     }}
     source{{
       id
     }}
     published_date
     summary
-    content
     og_title
     og_image
     og_description
