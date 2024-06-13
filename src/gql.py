@@ -100,6 +100,7 @@ query Stories{{
     }}
     published_date
     summary
+    content
     og_title
     og_image
     og_description
