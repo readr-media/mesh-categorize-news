@@ -139,10 +139,10 @@ async def cluster():
         if label>0:
             group_section = category_group.setdefault('groups', {})
             group_list = group_section.setdefault(str(label), [])
-            group_list.append(story_list[idx]['title'])
+            group_list.append(story_list[idx])
         else:
             other_list  = category_group.setdefault('others', [])
-            other_list.append(story_list[idx]['title'])
+            other_list.append(story_list[idx])
   
   ### save and upload
   for category_name, group_data in groups.items():
