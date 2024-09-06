@@ -136,3 +136,51 @@ mutation UpdateStories($data: [StoryUpdateArgs!]!) {
   }
 }
 """
+
+gql_stories_hotpage = '''
+query Stories{{
+  stories(
+    orderBy: {{
+        id: desc
+    }},
+    take: {TAKE}
+  ){{
+    id
+    url
+    title
+    category{{
+      slug
+    }}
+    source{{
+      id
+      title
+      customId
+    }}
+    picks: pick(
+      where: {{
+        kind: {{
+          equals: "read"
+        }},
+        is_active: {{
+          equals: true
+        }}
+      }},
+      take: 5
+    ){{
+      member{{
+        id
+        name
+        avatar
+      }}
+    }}
+    pickCount
+    published_date
+    commentCount
+    og_title
+    og_image
+    og_description
+    full_content
+    paywall
+  }}
+}}
+'''

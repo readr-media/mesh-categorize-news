@@ -5,10 +5,14 @@ import json
 
 MIN_TAKE_CATEGORIZATION = 0
 MAX_TAKE_CATEGORIZATION = 100
-DEFAULT_CLUSTER_EPS = 0.75  ### Max allowed euclidean distance between two samples for them to be considered in the same cluster
-DEFAULT_MIN_SAMPLES = 3     ### Min number of samples in a cluster
+DEFAULT_CLUSTER_EPS_NEWPAGE = 0.7  ### Max allowed euclidean distance between two samples for them to be considered in the same cluster
+DEFAULT_MIN_SAMPLES_NEWPAGE = 2    ### Min number of samples in a cluster
 DEFAULT_GROUP_DAYS = 3
 CLUSTER_STR_LEN = 30
+
+DEFAULT_CLUSTER_EPS_HOTPAGE = 0.6
+DEFAULT_MIN_SAMPLES_HOTPAGE = 4
+DEFAULT_HOTPAGE_STORIES_NUM = 300
 
 def download_models(category_table_url: str, classify_model_url: str, language_model: str='distiluse-base-multilingual-cased-v2'):
     if category_table_url is None or classify_model_url is None:

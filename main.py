@@ -3,13 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from src.classifier import ClassifierSingleton
 from src.request_body import CategoryRequestBody
-from src.gql import gql_query, gql_query_stories_without_category, gql_query_latest_stories, gql_story_update
-from src.tool import preprocess_text, upload_blob, save_file, remove_punctuation
+from src.gql import *
+from src.tool import preprocess_text, remove_punctuation
 import src.config as config
 import os
-from sklearn.cluster import DBSCAN
-from datetime import datetime, timedelta
-import pytz
+import src.cronjob as cronjob
 
 
 classifier_singleton = ClassifierSingleton()
@@ -87,66 +85,19 @@ async def categorize(data: CategoryRequestBody):
     return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=dict(error="Update category for stories failed."))
   return response
 
-@app.post('/cluster')
+@app.post('/cluster_newpage')
 async def cluster():
   '''
   Cronjob to cluster the stories as topic.
   '''
-  gql_endpoint = os.environ['MESH_GQL_ENDPOINT']
-  CLUSTER_EPS = float(os.environ.get('CLUSTER_EPS', config.DEFAULT_CLUSTER_EPS))
-  MIN_SAMPLES = int(os.environ.get('MIN_SAMPLES', config.DEFAULT_MIN_SAMPLES))
-  GROUP_DAYS = int(os.environ.get('GROUP_DAYS', config.DEFAULT_GROUP_DAYS))
-  
-  current_time = datetime.now(pytz.timezone('Asia/Taipei'))
-  start_time = current_time - timedelta(days=GROUP_DAYS)
-  formatted_start_time = start_time.isoformat()
-  
-  ### get classifier model
-  classifier = classifier_singleton.get_instance()
-  if classifier is None:
-    return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=dict(error="No classifier exists."))
-  
-  ### get cms stories
-  gql_stories_string = gql_query_latest_stories.format(START_PUBLISHED_DATE=formatted_start_time)
-  stories, error_message = gql_query(gql_endpoint, gql_stories_string)
+  error_message = cronjob.newpage_clustering(classifier_singleton)
   if error_message:
-    return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=dict(error="Query stories failed."))
-  stories = stories.get('stories', [])
-  if len(stories)==0:
-    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(error="Empty stories."))
-  
-  ### categorize
-  categorized_stories = {}
-  for story in stories:
-    category_name = story['category']['slug']
-    story_list = categorized_stories.setdefault(category_name, [])
-    story_list.append(story)
-  
-  ### cluster: you should remove noise by restricting the length of text
-  groups = {}
-  for category_name, story_list in categorized_stories.items():
-    contents = [
-      remove_punctuation(story['title']+story['summary'])+preprocess_text(story['content']) for story in story_list
-    ]
-    text_embeddings  = classifier.embedding(contents)
-    clustering = DBSCAN(eps=CLUSTER_EPS, min_samples=MIN_SAMPLES, metric='euclidean').fit(text_embeddings)
-    labels = clustering.labels_ # Note: noisy samples will be labelled -1
-    
-    # categorize group
-    category_group = groups.setdefault(category_name, {})
-    for idx, label in enumerate(labels):
-        label = 0 if label<=0 else label # noisy samples is the same as no-group
-        if label>0:
-            group_section = category_group.setdefault('groups', {})
-            group_list = group_section.setdefault(str(label), [])
-            group_list.append(story_list[idx])
-        else:
-            other_list  = category_group.setdefault('others', [])
-            other_list.append(story_list[idx])
-  
-  ### save and upload
-  for category_name, group_data in groups.items():
-    filename = os.path.join('data', f"group_{category_name}.json")
-    save_file(filename, group_data)
-    upload_blob(filename, cache_control="cache_control_long")
-  return {"message": "upload groups successfully"}
+    return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=dict(error=error_message))
+  return {"message": "upload newpage groups successfully"}
+
+@app.post('/cluster_hotpage')
+async def cluster_hotpage():
+  error_message = cronjob.hotpage_clustering(classifier_singleton)
+  if error_message:
+    return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=dict(error=error_message))
+  return {"message": "upload hotpage group successfully"}
