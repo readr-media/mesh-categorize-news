@@ -93,7 +93,7 @@ def hotpage_clustering(classifier_singleton: ClassifierSingleton):
 
     ### pre-processing stories
     contents = [story['title']+story['og_description'] for story in stories]
-    text_embeddings  = classifier.encode(contents)
+    text_embeddings  = classifier.embedding(contents)
 
     ### cluster stories
     clustering = DBSCAN(eps=CLUSTER_EPS, min_samples=MIN_SAMPLES, metric='euclidean').fit(text_embeddings)
