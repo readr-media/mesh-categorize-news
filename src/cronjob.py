@@ -1,6 +1,5 @@
 import os
-from gql import *
-from sklearn.cluster import DBSCAN
+from src.gql import *
 from src.tool import preprocess_text, upload_blob, save_file, remove_punctuation
 from src.classifier import ClassifierSingleton
 import src.config as config
@@ -8,6 +7,7 @@ import src.config as config
 from datetime import datetime, timedelta
 import pytz
 import statistics
+from sklearn.cluster import DBSCAN
 
 def newpage_clustering(classifier_singleton: ClassifierSingleton):
     error_message = None

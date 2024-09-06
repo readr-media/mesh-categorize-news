@@ -85,9 +85,9 @@ async def categorize(data: CategoryRequestBody):
   return response
 
 @app.post('/cluster_newpage')
-async def cluster():
+async def cluster_newpage():
   '''
-  Cronjob to cluster the stories as topic.
+  Cronjob to cluster the stories for newpage, cluster stories based on classification.
   '''
   error_message = cronjob.newpage_clustering(classifier_singleton)
   if error_message:
@@ -96,6 +96,9 @@ async def cluster():
 
 @app.post('/cluster_hotpage')
 async def cluster_hotpage():
+  '''
+  Cronjob to cluster the stories for hotpage, cluster all the recent stories.
+  '''
   error_message = cronjob.hotpage_clustering(classifier_singleton)
   if error_message:
     return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=dict(error=error_message))
