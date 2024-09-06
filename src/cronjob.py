@@ -1,9 +1,9 @@
 import os
-import config as config
 from gql import *
 from sklearn.cluster import DBSCAN
 from src.tool import preprocess_text, upload_blob, save_file, remove_punctuation
 from src.classifier import ClassifierSingleton
+import src.config as config
 
 from datetime import datetime, timedelta
 import pytz

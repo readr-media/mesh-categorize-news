@@ -6,9 +6,8 @@ from src.request_body import CategoryRequestBody
 from src.gql import *
 from src.tool import preprocess_text, remove_punctuation
 import src.config as config
-import os
 import src.cronjob as cronjob
-
+import os
 
 classifier_singleton = ClassifierSingleton()
 
