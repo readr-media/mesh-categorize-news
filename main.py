@@ -84,22 +84,22 @@ async def categorize(data: CategoryRequestBody):
     return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=dict(error="Update category for stories failed."))
   return response
 
-@app.post('/cluster_newpage')
-async def cluster_newpage():
+@app.post('/category_clustering')
+async def category_clustering():
   '''
-  Cronjob to cluster the stories for newpage, cluster stories based on classification.
+  Cronjob to cluster the stories based on different category for hotpage.
   '''
-  error_message = cronjob.newpage_clustering(classifier_singleton)
+  error_message = cronjob.category_clustering(classifier_singleton)
   if error_message:
     return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=dict(error=error_message))
   return {"message": "upload newpage groups successfully"}
 
-@app.post('/cluster_hotpage')
-async def cluster_hotpage():
+@app.post('/all_clustering')
+async def all_clustering():
   '''
-  Cronjob to cluster the stories for hotpage, cluster all the recent stories.
+  Cronjob to cluster all stories for hotpage.
   '''
-  error_message = cronjob.hotpage_clustering(classifier_singleton)
+  error_message = cronjob.all_clustering(classifier_singleton)
   if error_message:
     return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=dict(error=error_message))
   return {"message": "upload hotpage group successfully"}

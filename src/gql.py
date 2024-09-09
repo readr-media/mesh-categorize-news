@@ -96,13 +96,11 @@ query Stories{{
       slug
     }}
     source{{
+      id
       title
-      logo
-      official_site
+      customId
     }}
     published_date
-    summary
-    content
     pickCount
     commentCount
     og_title
@@ -110,6 +108,24 @@ query Stories{{
     og_description
     full_content
     paywall
+    picks: pick(
+      where: {{
+        kind: {{
+          equals: "read"
+        }},
+        is_active: {{
+          equals: true
+        }}
+      }},
+      take: 5
+    ){{
+      member{{
+        id
+        name
+        avatar
+      }}
+    }}
+    pickCount
   }}
 }}
 '''

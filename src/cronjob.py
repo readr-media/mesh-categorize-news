@@ -9,7 +9,10 @@ import pytz
 import statistics
 from sklearn.cluster import DBSCAN
 
-def newpage_clustering(classifier_singleton: ClassifierSingleton):
+def category_clustering(classifier_singleton: ClassifierSingleton):
+    '''
+        Cluster the stories based on different category
+    '''
     error_message = None
     gql_endpoint = os.environ['MESH_GQL_ENDPOINT']
     CLUSTER_EPS = float(os.environ.get('CLUSTER_EPS', config.DEFAULT_CLUSTER_EPS_NEWPAGE))
@@ -47,7 +50,7 @@ def newpage_clustering(classifier_singleton: ClassifierSingleton):
     groups = {}
     for category_name, story_list in categorized_stories.items():
         contents = [
-            remove_punctuation(story['title']+story['summary'])+preprocess_text(story['content']) for story in story_list
+            (story['title']+story['og_description']) for story in story_list
         ]
         text_embeddings  = classifier.embedding(contents)
         clustering = DBSCAN(eps=CLUSTER_EPS, min_samples=MIN_SAMPLES, metric='euclidean').fit(text_embeddings)
@@ -72,7 +75,7 @@ def newpage_clustering(classifier_singleton: ClassifierSingleton):
         upload_blob(filename, cache_control="cache_control_long")
     return error_message
 
-def hotpage_clustering(classifier_singleton: ClassifierSingleton):
+def all_clustering(classifier_singleton: ClassifierSingleton):
     error_message = None
     gql_endpoint = os.environ['MESH_GQL_ENDPOINT']
     CLUSTER_EPS = float(os.environ.get('CLUSTER_EPS_HOTPAGE', config.DEFAULT_CLUSTER_EPS_HOTPAGE))
