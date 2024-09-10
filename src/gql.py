@@ -126,6 +126,8 @@ query Stories{{
       }}
     }}
     pickCount
+    full_screen_ad
+    isMember
   }}
 }}
 '''
@@ -197,6 +199,8 @@ query Stories{{
     og_description
     full_content
     paywall
+    full_screen_ad
+    isMember
   }}
 }}
 '''
