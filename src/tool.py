@@ -5,6 +5,9 @@ from google.cloud import storage
 import os
 import json
 from datetime import datetime
+from src.classifier import classifier_singleton
+from sklearn.preprocessing import StandardScaler
+import src.config as config
 
 def remove_html(content):
     soup = bs(content, 'html.parser')
@@ -58,3 +61,18 @@ def open_file(filename):
 
 def df_timestamp(time_str):
     return datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%S.%fZ").timestamp()
+
+def embed_stories(stories):
+    ### get classifier model
+    classifier = classifier_singleton.get_instance()
+    if classifier is None:
+        return []
+    
+    ### precalculate embedding and standarization
+    scaler = StandardScaler()
+    contents = [
+      (story['title']*config.DEFAULT_TITLE_WEIGHT+story['og_description']) for story in stories
+    ]
+    text_embeddings  = classifier.embedding(contents)
+    scaled_embeddings = scaler.fit_transform(text_embeddings)
+    return scaled_embeddings

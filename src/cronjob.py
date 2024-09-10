@@ -1,12 +1,10 @@
 import os
 from src.gql import *
-from src.tool import upload_blob, save_file, df_timestamp
-from src.classifier import ClassifierSingleton
+from src.tool import upload_blob, save_file, df_timestamp, embed_stories
 import src.config as config
 
 from datetime import datetime, timedelta
 import pytz
-import statistics
 from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics.pairwise import cosine_similarity
@@ -14,7 +12,7 @@ import numpy as np
 
 scaler = StandardScaler()
 
-def category_clustering(classifier_singleton: ClassifierSingleton):
+def category_clustering():
     '''
         Cluster the stories based on different category
     '''
@@ -28,12 +26,6 @@ def category_clustering(classifier_singleton: ClassifierSingleton):
     start_time = current_time - timedelta(days=GROUP_DAYS)
     formatted_start_time = start_time.isoformat()
 
-    ### get classifier model
-    classifier = classifier_singleton.get_instance()
-    if classifier is None:
-        error_message = "No classifier exists."
-        return error_message
-
     ### get cms stories
     gql_stories_string = gql_query_latest_stories.format(START_PUBLISHED_DATE=formatted_start_time)
     stories, error_message = gql_query(gql_endpoint, gql_stories_string)
@@ -44,14 +36,9 @@ def category_clustering(classifier_singleton: ClassifierSingleton):
         error_message = "Empty stories."
         return error_message
 
-    ### precalculate embedding and standarization
-    contents = [
-      (story['title']*2+story['og_description']) for story in stories
-    ]
-    text_embeddings  = classifier.embedding(contents)
-    scaled_embeddings = scaler.fit_transform(text_embeddings)
 
-    ### categorize the stories and embedding
+    ### embed and cateorize stories
+    scaled_embeddings = embed_stories(stories)
     categorized_stories = {}
     for idx, story in enumerate(stories):
         category_name = story['category']['slug']
@@ -82,7 +69,7 @@ def category_clustering(classifier_singleton: ClassifierSingleton):
                 group_list = group_section.setdefault(str(label), [])
                 group_list.append(story_list[idx])
             else:
-                other_section.append(story_list[idx])
+                other_section.append(story_list[idx])       
 
     ### save and upload
     for category_name, group_data in groups.items():
@@ -91,18 +78,12 @@ def category_clustering(classifier_singleton: ClassifierSingleton):
         upload_blob(filename, cache_control="cache_control_long")
     return error_message
 
-def all_clustering(classifier_singleton: ClassifierSingleton):
+def all_clustering():
     error_message = None
     gql_endpoint = os.environ['MESH_GQL_ENDPOINT']
-    CLUSTER_EPS = float(os.environ.get('CLUSTER_EPS_HOTPAGE', config.DEFAULT_CLUSTER_EPS_HOTPAGE))
-    MIN_SAMPLES = int(os.environ.get('MIN_SAMPLES_HOTPAGE', config.DEFAULT_MIN_SAMPLES_HOTPAGE))
+    EPS_SIMILARITY_DIST = float(os.environ.get('EPS_SIMILARITY_DIST', config.HOTPAGE_CATEGORY_EPS_SIMILARITY))
+    MIN_SAMPLES = int(os.environ.get('HOTPAGE_ALL_MIN_SAMPLES', config.HOTPAGE_ALL_MIN_SAMPLES))
     HOTPAGE_STORIES_NUM = int(os.environ.get('HOTPAGE_STORIES_NUM', config.DEFAULT_HOTPAGE_STORIES_NUM))
-
-    ### get classifier model
-    classifier = classifier_singleton.get_instance()
-    if classifier is None:
-        error_message = "No classifier exists."
-        return error_message
 
     gql_stories_string = gql_stories_hotpage.format(TAKE=HOTPAGE_STORIES_NUM)
     stories, error_message = gql_query(gql_endpoint, gql_stories_string)
@@ -110,12 +91,11 @@ def all_clustering(classifier_singleton: ClassifierSingleton):
         return str(error_message)
     stories = stories['stories']
 
-    ### pre-processing stories
-    contents = [story['title']+story['og_description'] for story in stories]
-    text_embeddings  = classifier.embedding(contents)
-
     ### cluster stories
-    clustering = DBSCAN(eps=CLUSTER_EPS, min_samples=MIN_SAMPLES, metric='euclidean').fit(text_embeddings)
+    scaled_embeddings = embed_stories(stories)
+    cos_sim_matrix = cosine_similarity(scaled_embeddings)
+    cos_dist_matrix = 1 - np.clip(cos_sim_matrix, 0, 1) # clip negative to 0
+    clustering = DBSCAN(eps=EPS_SIMILARITY_DIST, min_samples=MIN_SAMPLES, metric='precomputed').fit(cos_dist_matrix)
     labels = clustering.labels_ # Note: noisy samples will be labelled -1
 
     ### classify labels
@@ -128,21 +108,6 @@ def all_clustering(classifier_singleton: ClassifierSingleton):
             group_list.append(stories[idx])
         else:
             hotpage_no_group.append(stories[idx])
-      
-    ### post-filtering: remove the abnormal group which have too many stories
-    group_lens = [len(group) for _, group in hotpage_group.items()]
-    median_len = statistics.median(group_lens)
-    threshold_len = config.DEFAULT_CLUSTER_MARGIN*median_len
-    print('threshold length is: ', threshold_len)
-    
-    remove_ids = []
-    for id, group in hotpage_group.items():
-        if len(group) > threshold_len:
-            remove_ids.append(id)
-            break
-    for id in remove_ids:
-        print('remove group id: ', id)
-        hotpage_group.pop(id)
     
     ### ranking: calcuate score of each group and rank
     # rank by media number: idx as the rank score, and larger group with higher score

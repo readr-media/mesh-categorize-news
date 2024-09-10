@@ -1,15 +1,13 @@
 from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from src.classifier import ClassifierSingleton
+from src.classifier import classifier_singleton
 from src.request_body import CategoryRequestBody
 from src.gql import *
 from src.tool import preprocess_text, remove_punctuation
 import src.config as config
 import src.cronjob as cronjob
 import os
-
-classifier_singleton = ClassifierSingleton()
 
 ### App related variables
 app = FastAPI()
@@ -89,7 +87,7 @@ async def category_clustering():
   '''
   Cronjob to cluster the stories based on different category for hotpage.
   '''
-  error_message = cronjob.category_clustering(classifier_singleton)
+  error_message = cronjob.category_clustering()
   if error_message:
     return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=dict(error=error_message))
   return {"message": "upload newpage groups successfully"}
@@ -99,7 +97,7 @@ async def all_clustering():
   '''
   Cronjob to cluster all stories for hotpage.
   '''
-  error_message = cronjob.all_clustering(classifier_singleton)
+  error_message = cronjob.all_clustering()
   if error_message:
     return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=dict(error=error_message))
   return {"message": "upload hotpage group successfully"}

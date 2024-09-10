@@ -54,3 +54,5 @@ class ClassifierSingleton():
                 category_table  = category_table
             )
         return self.classifier
+
+classifier_singleton = ClassifierSingleton()
