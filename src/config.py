@@ -5,11 +5,15 @@ import json
 
 MIN_TAKE_CATEGORIZATION = 0
 MAX_TAKE_CATEGORIZATION = 100
-DEFAULT_CLUSTER_EPS_NEWPAGE = 0.7  ### Max allowed euclidean distance between two samples for them to be considered in the same cluster
-DEFAULT_MIN_SAMPLES_NEWPAGE = 2    ### Min number of samples in a cluster
+
 DEFAULT_CLUSTER_MARGIN = 5
-DEFAULT_GROUP_DAYS = 1
+DEFAULT_TITLE_WEIGHT = 2
+
 CLUSTER_STR_LEN = 30
+
+HOTPAGE_CATEGORY_EPS_SIMILARITY = 0.3  ### Max allowed euclidean distance between two samples for them to be considered in the same cluster
+HOTPAGE_CATEGORY_MIN_SAMPLES = 3    ### Min number of samples in a cluster
+HOTPAGE_GROUP_DAYS = 1
 
 DEFAULT_CLUSTER_EPS_HOTPAGE = 0.6
 DEFAULT_MIN_SAMPLES_HOTPAGE = 4
