@@ -71,10 +71,28 @@ def category_clustering():
             else:
                 other_section.append(story_list[idx])       
 
+    ### find hightlight group and organize files
+    category_files = {}
+    for category_name, category_data in groups.items():
+        category_groups_data = category_data.get('groups', {})
+        highlight_group_id, _ = get_highlight_group(category_groups_data)
+        category_file = category_files.setdefault(category_name, {})
+        # topic
+        if highlight_group_id != config.NO_HIGHLIGHT_GROUP:
+            topic_data = category_data.get('groups', {}).get(highlight_group_id, [])
+            if topic_data:
+                category_file['group'] = topic_data
+        # others
+        others_list = category_file.setdefault('others', [])
+        for id, group_data in category_groups_data.items():
+            if id!=highlight_group_id:
+                others_list.extend(group_data)
+        others_list.extend(category_data['others'][:config.HOTPAGE_CATEGORY_OTHERS_ADDITION])         
+    
     ### save and upload
-    for category_name, group_data in groups.items():
+    for category_name, category_data in category_files.items():
         filename = os.path.join('data', f"group_{category_name}.json")
-        save_file(filename, group_data)
+        save_file(filename, category_data)
         upload_blob(filename, cache_control="cache_control_long")
     return error_message
 

@@ -95,7 +95,7 @@ def get_highlight_group(groups_data):
     '''
     ### ranking: calcuate score of each group and rank
     if not groups_data:
-        return config.NO_HIGHLIGHT_GROUP
+        return config.NO_HIGHLIGHT_GROUP, None
     # rank by media number
     sorted_media_number = sorted(
         groups_data.items(), key=lambda item: len(item[1])

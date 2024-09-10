@@ -13,6 +13,7 @@ CLUSTER_STR_LEN = 30
 
 HOTPAGE_CATEGORY_EPS_SIMILARITY = 0.3  ### Max allowed euclidean distance between two samples for them to be considered in the same cluster
 HOTPAGE_CATEGORY_MIN_SAMPLES = 3    ### Min number of samples in a cluster
+HOTPAGE_CATEGORY_OTHERS_ADDITION = 20
 HOTPAGE_GROUP_DAYS = 1
 HOTPAGE_ALL_MIN_SAMPLES = 4
 HOTPAGE_ALL_OTHERS_NUM = 6
