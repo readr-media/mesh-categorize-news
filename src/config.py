@@ -15,7 +15,9 @@ HOTPAGE_CATEGORY_EPS_SIMILARITY = 0.3  ### Max allowed euclidean distance betwee
 HOTPAGE_CATEGORY_MIN_SAMPLES = 3    ### Min number of samples in a cluster
 HOTPAGE_GROUP_DAYS = 1
 HOTPAGE_ALL_MIN_SAMPLES = 4
+HOTPAGE_ALL_OTHERS_NUM = 6
 DEFAULT_HOTPAGE_STORIES_NUM = 300
+NO_HIGHLIGHT_GROUP = -1
 
 def download_models(category_table_url: str, classify_model_url: str, language_model: str='distiluse-base-multilingual-cased-v2'):
     if category_table_url is None or classify_model_url is None:

@@ -1,6 +1,6 @@
 import os
 from src.gql import *
-from src.tool import upload_blob, save_file, df_timestamp, embed_stories
+from src.tool import upload_blob, save_file, df_timestamp, embed_stories, get_highlight_group
 import src.config as config
 
 from datetime import datetime, timedelta
@@ -108,53 +108,16 @@ def all_clustering():
             group_list.append(stories[idx])
         else:
             hotpage_no_group.append(stories[idx])
-    
-    ### ranking: calcuate score of each group and rank
-    # rank by media number: idx as the rank score, and larger group with higher score
-    sorted_media_number = sorted(
-        hotpage_group.items(), key=lambda item: len(item[1])
-    )
-    rank_media_number = {
-        group[0]: idx+1 for idx, group in enumerate(sorted_media_number)
-    }
-    
-    # rank by timestamp: idx as the rank score, and newer story with higher score
-    timestamp_table = {}
-    for group_id, group in hotpage_group.items():
-        for story in group:
-            timestamp_list = timestamp_table.setdefault(group_id, [])
-            timestamp_list.append(df_timestamp(story['published_date']))
-    for group_id, timestamp_list in timestamp_table.items():
-        min_timestamp = np.min(timestamp_list)
-        timestamp_table[group_id] = min_timestamp
-    
-    sorted_timestamp = sorted(
-        timestamp_table.items(),
-        key=lambda item: item[1],
-    )
-    rank_timestamp = {
-        group[0]: idx+1 for idx, group in enumerate(sorted_timestamp)
-    }
 
-    # weight the score
-    score_table = {}
-    for group_id, score in rank_media_number.items():
-        score_table[group_id] = score*rank_timestamp[group_id]
-    sorted_score_table = sorted(
-        score_table.items(),
-        key=lambda item: item[1],
-        reverse=True
-    )   
-
-    # select the topic
-    topic_group_id = sorted_score_table[0][0]
-    topic_group = hotpage_group[topic_group_id]
+    # get the highlight group
+    highlight_group_id, sorted_score_table = get_highlight_group(hotpage_group)
+    topic_group = hotpage_group[highlight_group_id]
     other_groups = [
         hotpage_group[group_id][0] for group_id, _ in sorted_score_table[1:]
     ]
-    if len(other_groups)<6:
+    if len(other_groups)<config.HOTPAGE_ALL_OTHERS_NUM:
         other_groups.extend(
-            hotpage_no_group[:6-len(other_groups)]
+            hotpage_no_group[:config.HOTPAGE_ALL_OTHERS_NUM-len(other_groups)]
         )
             
     ### save and upload

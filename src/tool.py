@@ -8,6 +8,7 @@ from datetime import datetime
 from src.classifier import classifier_singleton
 from sklearn.preprocessing import StandardScaler
 import src.config as config
+import numpy as np
 
 def remove_html(content):
     soup = bs(content, 'html.parser')
@@ -76,3 +77,60 @@ def embed_stories(stories):
     text_embeddings  = classifier.embedding(contents)
     scaled_embeddings = scaler.fit_transform(text_embeddings)
     return scaled_embeddings
+
+def get_highlight_group(groups_data):
+    '''
+        groups data should be the following format:
+        {
+            "id": STORIES_LIST [
+                STORY1{
+                    published_date
+                }
+                STORY2{
+                    published_date
+                }
+            ]
+        }
+        return the hightlight id which has the highest score based on timestamp and len(STORIES_LIST)
+    '''
+    ### ranking: calcuate score of each group and rank
+    if not groups_data:
+        return config.NO_HIGHLIGHT_GROUP
+    # rank by media number
+    sorted_media_number = sorted(
+        groups_data.items(), key=lambda item: len(item[1])
+    )
+    rank_media_number = {
+        group[0]: idx+1 for idx, group in enumerate(sorted_media_number)
+    }
+    
+    # rank by timestamp
+    timestamp_table = {}
+    for group_id, group in groups_data.items():
+        for story in group:
+            timestamp_list = timestamp_table.setdefault(group_id, [])
+            timestamp_list.append(df_timestamp(story['published_date']))
+    for group_id, timestamp_list in timestamp_table.items():
+        min_timestamp = np.min(timestamp_list)
+        timestamp_table[group_id] = min_timestamp
+    
+    sorted_timestamp = sorted(
+        timestamp_table.items(),
+        key=lambda item: item[1],
+    )
+    rank_timestamp = {
+        group[0]: idx+1 for idx, group in enumerate(sorted_timestamp)
+    }
+
+    # weight the score
+    score_table = {}
+    for group_id, score in rank_media_number.items():
+        score_table[group_id] = score*rank_timestamp[group_id]
+    sorted_score_table = sorted(
+        score_table.items(),
+        key=lambda item: item[1],
+        reverse=True
+    )
+    # select the highlight group
+    highlight_group_id = sorted_score_table[0][0]
+    return highlight_group_id, sorted_score_table
