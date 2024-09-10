@@ -7,6 +7,7 @@ MIN_TAKE_CATEGORIZATION = 0
 MAX_TAKE_CATEGORIZATION = 100
 DEFAULT_CLUSTER_EPS_NEWPAGE = 0.7  ### Max allowed euclidean distance between two samples for them to be considered in the same cluster
 DEFAULT_MIN_SAMPLES_NEWPAGE = 2    ### Min number of samples in a cluster
+DEFAULT_CLUSTER_MARGIN = 5
 DEFAULT_GROUP_DAYS = 1
 CLUSTER_STR_LEN = 30
 

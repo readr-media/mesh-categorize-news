@@ -4,6 +4,7 @@ import string
 from google.cloud import storage
 import os
 import json
+from datetime import datetime
 
 def remove_html(content):
     soup = bs(content, 'html.parser')
@@ -54,3 +55,6 @@ def open_file(filename):
     with open(filename, 'r', encoding='utf-8') as f:
         file = json.load(f)
     return file
+
+def df_timestamp(time_str):
+    return datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%S.%fZ").timestamp()

@@ -1,6 +1,6 @@
 import os
 from src.gql import *
-from src.tool import preprocess_text, upload_blob, save_file, remove_punctuation
+from src.tool import upload_blob, save_file, df_timestamp
 from src.classifier import ClassifierSingleton
 import src.config as config
 
@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 import pytz
 import statistics
 from sklearn.cluster import DBSCAN
+import numpy as np
 
 def category_clustering(classifier_singleton: ClassifierSingleton):
     '''
@@ -116,7 +117,7 @@ def all_clustering(classifier_singleton: ClassifierSingleton):
     ### post-filtering: remove the abnormal group which have too many stories
     group_lens = [len(group) for _, group in hotpage_group.items()]
     median_len = statistics.median(group_lens)
-    threshold_len = 2*median_len
+    threshold_len = config.DEFAULT_CLUSTER_MARGIN*median_len
     print('threshold length is: ', threshold_len)
     
     remove_ids = []
@@ -126,16 +127,64 @@ def all_clustering(classifier_singleton: ClassifierSingleton):
             break
     for id in remove_ids:
         print('remove group id: ', id)
-        hotpage_group.pop(id)      
-          
+        hotpage_group.pop(id)
+    
+    ### ranking: calcuate score of each group and rank
+    # rank by media number: idx as the rank score, and larger group with higher score
+    sorted_media_number = sorted(
+        hotpage_group.items(), key=lambda item: len(item[1])
+    )
+    rank_media_number = {
+        group[0]: idx+1 for idx, group in enumerate(sorted_media_number)
+    }
+    
+    # rank by timestamp: idx as the rank score, and newer story with higher score
+    timestamp_table = {}
+    for group_id, group in hotpage_group.items():
+        for story in group:
+            timestamp_list = timestamp_table.setdefault(group_id, [])
+            timestamp_list.append(df_timestamp(story['published_date']))
+    for group_id, timestamp_list in timestamp_table.items():
+        min_timestamp = np.min(timestamp_list)
+        timestamp_table[group_id] = min_timestamp
+    
+    sorted_timestamp = sorted(
+        timestamp_table.items(),
+        key=lambda item: item[1],
+    )
+    rank_timestamp = {
+        group[0]: idx+1 for idx, group in enumerate(sorted_timestamp)
+    }
+
+    # weight the score
+    score_table = {}
+    for group_id, score in rank_media_number.items():
+        score_table[group_id] = score*rank_timestamp[group_id]
+    sorted_score_table = sorted(
+        score_table.items(),
+        key=lambda item: item[1],
+        reverse=True
+    )   
+
+    # select the topic
+    topic_group_id = sorted_score_table[0][0]
+    topic_group = hotpage_group[topic_group_id]
+    other_groups = [
+        hotpage_group[group_id][0] for group_id, _ in sorted_score_table[1:]
+    ]
+    if len(other_groups)<6:
+        other_groups.extend(
+            hotpage_no_group[:6-len(other_groups)]
+        )
+            
     ### save and upload
     # upload group
     filename = os.path.join('data', f"hotpage_group.json")
-    save_file(filename, hotpage_group)
+    save_file(filename, topic_group)
     upload_blob(filename, cache_control="cache_control_long")
     # upload no group
     filename = os.path.join('data', f"hotpage_no_group.json")
-    save_file(filename, hotpage_no_group)
+    save_file(filename, other_groups)
     upload_blob(filename, cache_control="cache_control_long")
 
     return error_message
