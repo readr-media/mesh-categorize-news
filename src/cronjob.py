@@ -48,7 +48,7 @@ def category_clustering(classifier_singleton: ClassifierSingleton):
     contents = [
       (story['title']*2+story['og_description']) for story in stories
     ]
-    text_embeddings  = classifier.embedding.encode(contents)
+    text_embeddings  = classifier.embedding(contents)
     scaled_embeddings = scaler.fit_transform(text_embeddings)
 
     ### categorize the stories and embedding
