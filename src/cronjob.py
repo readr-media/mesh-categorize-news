@@ -27,7 +27,7 @@ def category_clustering():
     formatted_start_time = start_time.isoformat()
 
     ### get cms stories
-    gql_stories_string = gql_query_latest_stories.format(START_PUBLISHED_DATE=formatted_start_time)
+    gql_stories_string = gql_latest_stories.format(START_PUBLISHED_DATE=formatted_start_time)
     stories, error_message = gql_query(gql_endpoint, gql_stories_string)
     if error_message:
         return str(error_message)
@@ -35,7 +35,6 @@ def category_clustering():
     if len(stories)==0:
         error_message = "Empty stories."
         return error_message
-
 
     ### embed and cateorize stories
     scaled_embeddings = embed_stories(stories)
@@ -101,9 +100,14 @@ def all_clustering():
     gql_endpoint = os.environ['MESH_GQL_ENDPOINT']
     EPS_SIMILARITY_DIST = float(os.environ.get('EPS_SIMILARITY_DIST', config.HOTPAGE_CATEGORY_EPS_SIMILARITY))
     MIN_SAMPLES = int(os.environ.get('HOTPAGE_ALL_MIN_SAMPLES', config.HOTPAGE_ALL_MIN_SAMPLES))
-    HOTPAGE_STORIES_NUM = int(os.environ.get('HOTPAGE_STORIES_NUM', config.DEFAULT_HOTPAGE_STORIES_NUM))
+    GROUP_DAYS = int(os.environ.get('GROUP_DAYS', config.HOTPAGE_GROUP_DAYS))
 
-    gql_stories_string = gql_stories_hotpage.format(TAKE=HOTPAGE_STORIES_NUM)
+    current_time = datetime.now(pytz.timezone('Asia/Taipei'))
+    start_time = current_time - timedelta(days=GROUP_DAYS)
+    formatted_start_time = start_time.isoformat()
+
+    ### get cms stories
+    gql_stories_string = gql_latest_stories.format(START_PUBLISHED_DATE=formatted_start_time)
     stories, error_message = gql_query(gql_endpoint, gql_stories_string)
     if error_message:
         return str(error_message)

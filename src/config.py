@@ -17,7 +17,6 @@ HOTPAGE_CATEGORY_OTHERS_ADDITION = 20
 HOTPAGE_GROUP_DAYS = 1
 HOTPAGE_ALL_MIN_SAMPLES = 4
 HOTPAGE_ALL_OTHERS_NUM = 6
-DEFAULT_HOTPAGE_STORIES_NUM = 300
 NO_HIGHLIGHT_GROUP = -1
 
 def download_models(category_table_url: str, classify_model_url: str, language_model: str='distiluse-base-multilingual-cased-v2'):

@@ -61,7 +61,7 @@ async def categorize(data: CategoryRequestBody):
     return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=dict(error="No classifier exists."))
   
   ### get cms stories
-  gql_stories_string = gql_query_stories_without_category.format(take=take)
+  gql_stories_string = gql_stories_without_category.format(take=take)
   stories, error_message = gql_query(gql_endpoint, gql_stories_string)
   if error_message:
     return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=dict(error="Query stories failed."))
