@@ -66,8 +66,8 @@ async def categorize(data: CategoryRequestBody):
   if error_message:
     return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=dict(error="Query stories failed."))
   stories = stories.get('stories', [])
-  if len(stories)==0:
-    return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=dict(error="Empty stories."))
+  if stories==None or len(stories)==0:
+    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(error="Empty stories."))
   
   ### predict category
   contents = [
