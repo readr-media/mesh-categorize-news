@@ -17,11 +17,15 @@ def remove_html(content):
     return soup.get_text()
 
 def remove_punctuation(content):
+    if content==None:
+        return ''
     punctuation_pattern = re.escape(string.punctuation)
     content_filtered = re.sub(f'[{punctuation_pattern}]', '', content)
     return content_filtered
 
 def preprocess_text(content):
+    if content==None:
+        return ''
     return remove_punctuation(remove_html(content))
 
 ### cache-control
