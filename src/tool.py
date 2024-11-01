@@ -100,9 +100,15 @@ def get_highlight_group(groups_data):
     ### ranking: calcuate score of each group and rank
     if not groups_data:
         return config.NO_HIGHLIGHT_GROUP, None
-    # rank by media number
+    
+    # rank by distinct media number
+    distinct_media_count = {}
+    for idx, data in groups_data.items():
+        sources = [story['source']['id'] for story in data]
+        distinct_media_count[idx] = len(set(sources))
+    
     sorted_media_number = sorted(
-        groups_data.items(), key=lambda item: len(item[1])
+        distinct_media_count.items(), key=lambda item: item[1]
     )
     rank_media_number = {
         group[0]: idx+1 for idx, group in enumerate(sorted_media_number)
