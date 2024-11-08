@@ -20,10 +20,10 @@ def category_clustering():
     gql_endpoint = os.environ['MESH_GQL_ENDPOINT']
     EPS_SIMILARITY_DIST = float(os.environ.get('EPS_SIMILARITY_DIST', config.HOTPAGE_CATEGORY_EPS_SIMILARITY))
     MIN_SAMPLES = int(os.environ.get('CATEGORY_MIN_SAMPLES', config.HOTPAGE_CATEGORY_MIN_SAMPLES))
-    GROUP_DAYS = int(os.environ.get('GROUP_DAYS', config.HOTPAGE_GROUP_DAYS))
+    GROUP_HOURS = config.HOTPAGE_GROUP_HOURS
 
     current_time = datetime.now(pytz.timezone('Asia/Taipei'))
-    start_time = current_time - timedelta(days=GROUP_DAYS)
+    start_time = current_time - timedelta(hours=GROUP_HOURS)
     formatted_start_time = start_time.isoformat()
 
     ### get cms stories
@@ -100,10 +100,10 @@ def all_clustering():
     gql_endpoint = os.environ['MESH_GQL_ENDPOINT']
     EPS_SIMILARITY_DIST = float(os.environ.get('EPS_SIMILARITY_DIST', config.HOTPAGE_CATEGORY_EPS_SIMILARITY))
     MIN_SAMPLES = int(os.environ.get('HOTPAGE_ALL_MIN_SAMPLES', config.HOTPAGE_ALL_MIN_SAMPLES))
-    GROUP_DAYS = int(os.environ.get('GROUP_DAYS', config.HOTPAGE_GROUP_DAYS))
+    GROUP_HOURS = config.HOTPAGE_GROUP_HOURS
 
     current_time = datetime.now(pytz.timezone('Asia/Taipei'))
-    start_time = current_time - timedelta(days=GROUP_DAYS)
+    start_time = current_time - timedelta(hours=GROUP_HOURS)
     formatted_start_time = start_time.isoformat()
 
     ### get cms stories
@@ -133,24 +133,24 @@ def all_clustering():
 
     # get the highlight group
     highlight_group_id, sorted_score_table = get_highlight_group(hotpage_group)
-    print("All clustering: highlight group id: ", highlight_group_id)
-    topic_group = hotpage_group[highlight_group_id]
-    other_groups = [
-        hotpage_group[group_id][0] for group_id, _ in sorted_score_table[1:]
-    ]
-    if len(other_groups)<config.HOTPAGE_ALL_OTHERS_NUM:
-        other_groups.extend(
-            hotpage_no_group[:config.HOTPAGE_ALL_OTHERS_NUM-len(other_groups)]
-        )
-            
-    ### save and upload
-    # upload group
-    filename = os.path.join('data', f"hotpage_group.json")
-    save_file(filename, topic_group)
-    upload_blob(filename, cache_control="cache_control_long")
-    # upload no group
-    filename = os.path.join('data', f"hotpage_no_group.json")
-    save_file(filename, other_groups)
-    upload_blob(filename, cache_control="cache_control_long")
+    if highlight_group_id != config.NO_HIGHLIGHT_GROUP:
+        topic_group = hotpage_group[highlight_group_id]
+        other_groups = [
+            hotpage_group[group_id][0] for group_id, _ in sorted_score_table[1:]
+        ]
+        if len(other_groups)<config.HOTPAGE_ALL_OTHERS_NUM:
+            other_groups.extend(
+                hotpage_no_group[:config.HOTPAGE_ALL_OTHERS_NUM-len(other_groups)]
+            )
+                
+        ### save and upload
+        # upload group
+        filename = os.path.join('data', f"hotpage_group.json")
+        save_file(filename, topic_group)
+        upload_blob(filename, cache_control="cache_control_long")
+        # upload no group
+        filename = os.path.join('data', f"hotpage_no_group.json")
+        save_file(filename, other_groups)
+        upload_blob(filename, cache_control="cache_control_long")
 
     return error_message

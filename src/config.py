@@ -2,6 +2,7 @@ from sentence_transformers import SentenceTransformer
 import requests
 import joblib
 import json
+import os
 
 MIN_TAKE_CATEGORIZATION = 0
 MAX_TAKE_CATEGORIZATION = 100
@@ -14,10 +15,15 @@ CLUSTER_STR_LEN = 30
 HOTPAGE_CATEGORY_EPS_SIMILARITY = 0.3  ### Max allowed euclidean distance between two samples for them to be considered in the same cluster
 HOTPAGE_CATEGORY_MIN_SAMPLES = 3    ### Min number of samples in a cluster
 HOTPAGE_CATEGORY_OTHERS_ADDITION = 20
-HOTPAGE_GROUP_DAYS = 1
+
 HOTPAGE_ALL_MIN_SAMPLES = 4
 HOTPAGE_ALL_OTHERS_NUM = 6
 NO_HIGHLIGHT_GROUP = -1
+
+DEFAULT_HOTPAGE_GROUP_DAYS = 1
+HOTPAGE_GROUP_DAYS = int(os.environ.get('HOTPAGE_GROUP_DAYS', DEFAULT_HOTPAGE_GROUP_DAYS))
+DEFAULT_HOTPAGE_GROUP_HOURS = 36
+HOTPAGE_GROUP_HOURS = int(os.environ.get('HOTPAGE_GROUP_HOURS', DEFAULT_HOTPAGE_GROUP_HOURS))
 
 def download_models(category_table_url: str, classify_model_url: str, language_model: str='distiluse-base-multilingual-cased-v2'):
     if category_table_url is None or classify_model_url is None:
