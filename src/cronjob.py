@@ -133,6 +133,7 @@ def all_clustering():
 
     # get the highlight group
     highlight_group_id, sorted_score_table = get_highlight_group(hotpage_group)
+    print("All clustering: highlight group id: ", highlight_group_id)
     topic_group = hotpage_group[highlight_group_id]
     other_groups = [
         hotpage_group[group_id][0] for group_id, _ in sorted_score_table[1:]
