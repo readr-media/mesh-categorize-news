@@ -46,7 +46,7 @@ class ClassifierSingleton():
         if self.classifier is None:
             category_table_url = os.environ.get('CATEGORY_TABLE_URL', "https://storage.googleapis.com/statics-mesh-tw-dev/ai-models/category_table.json")
             classify_model_url = os.environ.get('CLASSIFY_MODEL_URL', "https://storage.googleapis.com/statics-mesh-tw-dev/ai-models/classify_model_svm.joblib")
-            language_model = os.environ.get('LANGUAGE_MODEL', 'distiluse-base-multilingual-cased-v2')
+            language_model = config.LANGUAGE_MODEL
             category_table, classify_model, embedding_model = config.download_models(category_table_url, classify_model_url, language_model)
             self.classifier = Classifier(
                 classify_model  = classify_model,

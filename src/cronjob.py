@@ -1,6 +1,6 @@
 import os
 from src.gql import *
-from src.tool import upload_blob, save_file, df_timestamp, embed_stories, get_highlight_group
+from src.tool import upload_blob, save_file, embed_stories, get_highlight_group, remove_nonprintable, remove_html
 import src.config as config
 
 from datetime import datetime, timedelta
@@ -9,6 +9,7 @@ from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
+from src.keyword_extract import kw_model
 
 scaler = StandardScaler()
 
@@ -154,3 +155,51 @@ def all_clustering():
         upload_blob(filename, cache_control="cache_control_long")
 
     return error_message
+
+def keyword_labelling(story_num: int=100, least_ngram: int=2, top_n: int=4):
+    gql_endpoint = os.environ['MESH_GQL_ENDPOINT']
+    
+    try:
+        # get data
+        data, _ = gql_query(gql_endpoint, gql_story_tags.format(NUM=story_num))
+        stories = data['stories']
+        content = [
+            story['title'] + remove_nonprintable(remove_html(story['content'])) for story in stories
+        ]
+        
+        # get keywords, which is the array of (phrase, score)
+        keywords = kw_model.get_keyword(content)
+        mutation_data = []
+        for idx in range(len(stories)):
+            story_id       = stories[idx]['id']
+            story_keywords = keywords[idx]
+
+            # filter keywords which n-gram is less than 2
+            filtered_keywords = []
+            for keyword, _ in story_keywords:
+                if len(keyword) >= least_ngram:
+                    filtered_keywords.append({
+                        "name": keyword
+                    })
+
+            mutation_data.append({
+                "where": {
+                    "id": story_id
+                },
+                "data": {
+                    "tag": {
+                        "create": filtered_keywords[:top_n]
+                    }
+                }
+            })
+        mutation_var = {
+            "data": mutation_data
+        }
+        
+        # update
+        _, error_msg = gql_query(gql_update_stories, gql_update_stories, mutation_var)
+        if error_msg:
+            raise Exception(error_msg)
+    except Exception as e:
+        print("cronjob: keyword labelling error: ", e)
+    return error_msg

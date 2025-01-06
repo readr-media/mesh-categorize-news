@@ -153,3 +153,22 @@ mutation UpdateStories($data: [StoryUpdateArgs!]!) {
   }
 }
 """
+
+### For keywords(tags)
+gql_story_tags = '''
+query stories{{
+  stories(where: {{tag: {{none: {{}} }} }}, orderBy: {{id: desc}}, take: {NUM}){{
+    id
+    title
+    content
+  }}
+}}
+'''
+
+gql_update_stories = '''
+mutation updateStories($data: [StoryUpdateArgs!]!){
+  updateStories(data: $data){
+    id
+  }
+}
+'''

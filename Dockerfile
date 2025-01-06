@@ -14,7 +14,7 @@ RUN apt-get update -y \
 # Install torch and sentence-transformer
 RUN pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu \ 
     && pip install transformers tqdm numpy scikit-learn==1.3.0 scipy nltk sentencepiece \
-    && pip install --no-deps sentence-transformers \
+    && pip install --no-deps sentence-transformers ckip-transformers \
     && pip install -r requirements.txt
 
 # Use tini to manage zombie processes and signal forwarding

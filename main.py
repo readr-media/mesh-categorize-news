@@ -8,6 +8,7 @@ from src.tool import preprocess_text, remove_punctuation
 import src.config as config
 import src.cronjob as cronjob
 import os
+from src.keyword_extract import kw_model
 
 ### App related variables
 app = FastAPI()
@@ -101,3 +102,10 @@ async def all_clustering():
   if error_message:
     return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=dict(error=error_message))
   return {"message": "upload hotpage group successfully"}
+
+@app.post('/keyword')
+async def cronjob_keyword():
+  error_message = cronjob.keyword_labelling()
+  if error_message:
+    return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=dict(error=error_message))
+  return {"message": "keyword labelling successfully"}

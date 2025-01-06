@@ -25,6 +25,9 @@ HOTPAGE_GROUP_DAYS = int(os.environ.get('HOTPAGE_GROUP_DAYS', DEFAULT_HOTPAGE_GR
 DEFAULT_HOTPAGE_GROUP_HOURS = 36
 HOTPAGE_GROUP_HOURS = int(os.environ.get('HOTPAGE_GROUP_HOURS', DEFAULT_HOTPAGE_GROUP_HOURS))
 
+DEFAULT_LANGUAGE_MODEL = 'distiluse-base-multilingual-cased-v1'
+LANGUAGE_MODEL = os.environ.get("LANGAUGE_MODEL", DEFAULT_LANGUAGE_MODEL)
+
 def download_models(category_table_url: str, classify_model_url: str, language_model: str='distiluse-base-multilingual-cased-v2'):
     if category_table_url is None or classify_model_url is None:
         print('You should provide category table and classify model urls...')
