@@ -197,7 +197,7 @@ def keyword_labelling(story_num: int=100, least_ngram: int=2, top_n: int=4):
         }
         
         # update
-        _, error_msg = gql_query(gql_update_stories, gql_update_stories, mutation_var)
+        _, error_msg = gql_query(gql_endpoint, gql_update_stories, mutation_var)
         if error_msg:
             raise Exception(error_msg)
     except Exception as e:
