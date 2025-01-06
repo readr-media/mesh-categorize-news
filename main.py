@@ -104,8 +104,9 @@ async def all_clustering():
   return {"message": "upload hotpage group successfully"}
 
 @app.post('/keyword')
-async def cronjob_keyword():
-  error_message = cronjob.keyword_labelling()
+async def cronjob_keyword(data: dict):
+  take = data.get('take', config.KEYWORD_LABELLING_NUM)
+  error_message = cronjob.keyword_labelling(story_num=take)
   if error_message:
     return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=dict(error=error_message))
   return {"message": "keyword labelling successfully"}

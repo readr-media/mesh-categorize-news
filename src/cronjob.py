@@ -156,9 +156,9 @@ def all_clustering():
 
     return error_message
 
-def keyword_labelling(story_num: int=100, least_ngram: int=2, top_n: int=4):
+def keyword_labelling(story_num: int=config.KEYWORD_LABELLING_NUM, least_ngram: int=2, top_n: int=4):
     gql_endpoint = os.environ['MESH_GQL_ENDPOINT']
-    
+    error_msg = None
     try:
         # get data
         data, _ = gql_query(gql_endpoint, gql_story_tags.format(NUM=story_num))
