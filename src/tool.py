@@ -11,10 +11,15 @@ import src.config as config
 import numpy as np
 
 def remove_html(content):
-    soup = bs(content, 'html.parser')
-    for a_tag in soup.find_all('a'):
-        a_tag.extract()
-    return soup.get_text()
+    result = ''
+    try:
+        soup = bs(content, 'html.parser')
+        for a_tag in soup.find_all('a'):
+            a_tag.extract()
+        result = soup.get_text()
+    except Exception as e:
+        print("remove_html:", e)
+    return result
 
 def remove_punctuation(content):
     if content==None:

@@ -160,6 +160,7 @@ query stories{{
   stories(where: {{tag: {{none: {{}} }} }}, orderBy: {{id: desc}}, take: {NUM}){{
     id
     title
+    summary
     content
   }}
 }}
