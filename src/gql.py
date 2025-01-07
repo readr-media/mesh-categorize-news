@@ -161,7 +161,7 @@ query stories{{
     id
     title
     summary
-    content
+    trimContent
   }}
 }}
 '''

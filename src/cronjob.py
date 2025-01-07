@@ -164,7 +164,7 @@ def keyword_labelling(story_num: int=config.KEYWORD_LABELLING_NUM, least_ngram: 
         data, _ = gql_query(gql_endpoint, gql_story_tags.format(NUM=story_num))
         stories = data['stories']
         content = [
-            story['title'] + remove_nonprintable(remove_html(story['summary'])) + remove_nonprintable(remove_html(story['content'])) for story in stories
+            story['title'] + remove_nonprintable(remove_html(story['summary'])) + remove_nonprintable(remove_html(story['trimContent'])) for story in stories
         ]
         
         # get keywords, which is the array of (phrase, score)
