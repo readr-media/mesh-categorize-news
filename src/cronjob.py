@@ -190,7 +190,7 @@ def keyword_labelling(story_num: int=config.KEYWORD_LABELLING_NUM, least_ngram: 
                     },
                     "data": {
                         "tag": {
-                            "create": filtered_keywords[:top_n]
+                            "connect": filtered_keywords[:top_n]
                         }
                     }
                 })
