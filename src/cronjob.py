@@ -177,23 +177,26 @@ def keyword_labelling(story_num: int=config.KEYWORD_LABELLING_NUM, least_ngram: 
 
             # filter keywords which n-gram is less than 2
             filtered_keywords = []
-            for keyword, _ in story_keywords:
-                if len(keyword) >= least_ngram:
-                    filtered_keywords.append({
-                        "name": keyword
-                    })
+            try:
+                for keyword, _ in story_keywords:
+                    if len(keyword) >= least_ngram:
+                        filtered_keywords.append({
+                            "name": keyword
+                        })
 
-            mutation_data.append({
-                "where": {
-                    "id": story_id
-                },
-                "data": {
-                    "tag": {
-                        "create": filtered_keywords[:top_n]
+                mutation_data.append({
+                    "where": {
+                        "id": story_id
+                    },
+                    "data": {
+                        "tag": {
+                            "create": filtered_keywords[:top_n]
+                        }
                     }
-                }
-            })
-            all_keywords.extend(filtered_keywords[:top_n])
+                })
+                all_keywords.extend(filtered_keywords[:top_n])
+            except Exception as e:
+                print(f"keyword labelled failed for story_id: {story_id}. error:", e)
         
         mutation_create_tags = {
             "data": all_keywords
