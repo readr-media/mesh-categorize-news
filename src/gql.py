@@ -172,3 +172,12 @@ mutation updateStories($data: [StoryUpdateArgs!]!){
   }
 }
 '''
+
+gql_create_tags = '''
+mutation createTags($data: [TagCreateInput!]!){
+  createTags(data: $data){
+    id
+    name
+  }
+}
+'''

@@ -170,6 +170,7 @@ def keyword_labelling(story_num: int=config.KEYWORD_LABELLING_NUM, least_ngram: 
         # get keywords, which is the array of (phrase, score)
         keywords = kw_model.get_keyword(content)
         mutation_data = []
+        all_keywords = []
         for idx in range(len(stories)):
             story_id       = stories[idx]['id']
             story_keywords = keywords[idx]
@@ -192,12 +193,18 @@ def keyword_labelling(story_num: int=config.KEYWORD_LABELLING_NUM, least_ngram: 
                     }
                 }
             })
-        mutation_var = {
+            all_keywords.extend(filtered_keywords[:top_n])
+        
+        mutation_create_tags = {
+            "data": all_keywords
+        }
+        mutation_story_tags = {
             "data": mutation_data
         }
         
-        # update
-        _, error_msg = gql_query(gql_endpoint, gql_update_stories, mutation_var)
+        # create tags and update story.tags
+        _, _ = gql_query(gql_endpoint, gql_create_tags, mutation_create_tags)
+        _, error_msg = gql_query(gql_endpoint, gql_update_stories, mutation_story_tags)
         if error_msg:
             raise Exception(error_msg)
     except Exception as e:
