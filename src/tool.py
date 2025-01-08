@@ -18,7 +18,7 @@ def remove_html(content):
             a_tag.extract()
         result = soup.get_text()
     except Exception as e:
-        print("remove_html:", e)
+        print("remove_html error: ", e)
     return result
 
 def remove_punctuation(content):
@@ -27,6 +27,14 @@ def remove_punctuation(content):
     punctuation_pattern = re.escape(string.punctuation)
     content_filtered = re.sub(f'[{punctuation_pattern}]', '', content)
     return content_filtered
+
+def remove_nonword(content):
+    result = content
+    try:
+        result = re.sub(r'[^\w]', '', content)
+    except Exception as e:
+        print("remove_nonword error: ", e)
+    return result
 
 def remove_nonprintable(text):
     cleaned_text = "".join(char for char in text if char.isprintable())

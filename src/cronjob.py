@@ -1,6 +1,6 @@
 import os
 from src.gql import *
-from src.tool import upload_blob, save_file, embed_stories, get_highlight_group, remove_nonprintable, remove_html
+from src.tool import upload_blob, save_file, embed_stories, get_highlight_group, remove_nonprintable, remove_html, remove_nonword
 import src.config as config
 
 from datetime import datetime, timedelta
@@ -181,7 +181,7 @@ def keyword_labelling(story_num: int=config.KEYWORD_LABELLING_NUM, least_ngram: 
                 for keyword, _ in story_keywords:
                     if len(keyword) >= least_ngram:
                         filtered_keywords.append({
-                            "name": keyword
+                            "name": remove_nonword(keyword)
                         })
 
                 mutation_data.append({
