@@ -182,3 +182,50 @@ mutation createTags($data: [TagCreateInput!]!){
   }
 }
 '''
+
+gql_group_podcasts = '''
+query podcasts{{
+    podcasts(orderBy: {{id: desc}}, take: {MAX_NUM}){{
+        story{{
+            id
+            url
+            title
+            category{{
+              slug
+            }}
+            source{{
+              id
+              title
+              customId
+            }}
+            published_date
+            og_title
+            og_image
+            og_description
+            picks: pick(
+              where: {{
+                kind: {{
+                  equals: "read"
+                }},
+                is_active: {{
+                  equals: true
+                }}
+              }},
+              take: 5
+            ){{
+              member{{
+                id
+                name
+                avatar
+              }}
+            }}
+            pickCount
+            commentCount
+            full_content
+            full_screen_ad
+            paywall
+            isMember
+        }}
+    }}
+}}
+'''

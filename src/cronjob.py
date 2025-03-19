@@ -11,6 +11,10 @@ from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 from src.keyword_extract import kw_model
 
+# For the category in exception, the stories will not be processed by default clustering algorithm
+EXCEPTION_CATEGORY_SLUG = [
+    "podcast"
+]
 scaler = StandardScaler()
 
 def category_clustering():
@@ -42,6 +46,8 @@ def category_clustering():
     categorized_stories = {}
     for idx, story in enumerate(stories):
         category_name = story['category']['slug']
+        if category_name in EXCEPTION_CATEGORY_SLUG:
+            continue
         category_info = categorized_stories.setdefault(category_name, {})
         story_list = category_info.setdefault('stories', [])
         story_list.append(story)
@@ -94,7 +100,24 @@ def category_clustering():
         filename = os.path.join('data', f"group_{category_name}.json")
         save_file(filename, category_data)
         upload_blob(filename, cache_control="cache_control_long")
+        
+    ### For exception category, use other generator to get content
+    # Exception category: Podcast
+    podcasts_stories = gen_group_podcast(gql_endpoint)
+    podcasts_data = {
+        "others": podcasts_stories
+    }
+    filename = os.path.join('data', f"group_podcast.json")
+    save_file(filename, podcasts_data)
+    upload_blob(filename, cache_control="cache_control_long")
     return error_message
+
+def gen_group_podcast(gql_endpoint, max_num: int=50):
+    gql_string = gql_group_podcasts.format(MAX_NUM=max_num)
+    data = gql_query(gql_endpoint, gql_string)
+    podcasts = data['podcasts']
+    podcast_stories = [podcast['story'] for podcast in podcasts]
+    return podcast_stories
 
 def all_clustering():
     error_message = None
