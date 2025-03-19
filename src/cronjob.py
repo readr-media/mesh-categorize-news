@@ -114,7 +114,10 @@ def category_clustering():
 
 def gen_group_podcast(gql_endpoint, max_num: int=50):
     gql_string = gql_group_podcasts.format(MAX_NUM=max_num)
-    data = gql_query(gql_endpoint, gql_string)
+    data, error_message = gql_query(gql_endpoint, gql_string)
+    if error_message:
+        print("Failed to gen_group_podcast, error: {error_message}")
+        return []
     podcasts = data['podcasts']
     podcast_stories = [podcast['story'] for podcast in podcasts]
     return podcast_stories
