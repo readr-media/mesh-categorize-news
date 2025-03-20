@@ -127,6 +127,7 @@ query Stories{{
     full_screen_ad
     paywall
     isMember
+    story_type
   }}
 }}
 '''
