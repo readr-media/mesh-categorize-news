@@ -119,7 +119,7 @@ def gen_group_podcast(gql_endpoint, max_num: int=50):
         print("Failed to gen_group_podcast, error: {error_message}")
         return []
     podcasts = data['podcasts']
-    podcast_stories = [podcast['story'] for podcast in podcasts]
+    podcast_stories = [podcast['story'] for podcast in podcasts if podcast.get('story', None)]
     return podcast_stories
 
 def all_clustering():
